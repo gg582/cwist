@@ -1,0 +1,34 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-I./lib",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "lib/cjson/cJSON.o",
+      "lib/cjson/cJSON.c"
+    ],
+    "directory": "/home/yjlee/cwistaw",
+    "file": "/home/yjlee/cwistaw/lib/cjson/cJSON.c",
+    "output": "/home/yjlee/cwistaw/lib/cjson/cJSON.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./include",
+      "-I./lib",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "src/smartstring/smartstring.o",
+      "src/smartstring/smartstring.c"
+    ],
+    "directory": "/home/yjlee/cwistaw",
+    "file": "/home/yjlee/cwistaw/src/smartstring/smartstring.c",
+    "output": "/home/yjlee/cwistaw/src/smartstring/smartstring.o"
+  }
+]

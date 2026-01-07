@@ -1,0 +1,23 @@
+==== What is CWISTAW? =====
+CWISTAW is a acronym of "C Web development Is STill Alive and Well".
+This aims for modern, and fast C web framework.
+
+== What is going on? ==
+- Smart String
+- Error Codes
+== What's next? ==
+- HTTP Handlers
+  - Abstract socket handlers
+  - Memory-safe easy multiprocessing
+
+== Dependency ==
+- https://github.com/DaveGamble/cJSON
+
+== Plans ==
+- Memory manager
+- (optional) libgc extension
+- Mux Router
+- CORS, HTTPS
+- RestAPI Server
+
+
