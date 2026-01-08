@@ -1,7 +1,26 @@
 #include <cwistaw/http.h>
+#include <cwistaw/smartstring.h>
+#include <cwistaw/err/cwist_err.h>
+
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <errno.h>
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+const int CWIST_CREATE_SOCKET_FAILED     = -1;
+const int CWIST_HTTP_UNAVAILABLE_ADDRESS = -2;
+const int CWIST_HTTP_BIND_FAILED         = -3;
+const int CWIST_HTTP_SETSOCKOPT_FAILED   = -4;
+const int CWIST_HTTP_LISTEN_FAILED       = -5;
 
 /* --- Helpers --- */
 
@@ -137,4 +156,111 @@ void cwist_http_response_destroy(cwist_http_response *res) {
         cwist_http_header_free_all(res->headers);
         free(res);
     }
+}
+
+/* --- Socket Manipulation --- */
+
+int cwist_make_socket_ipv4(struct sockaddr_in *sockv4, const char *address, uint16_t port, uint16_t backlog) {
+  int server_fd = -1;
+  int opt = 1;
+  cwist_error_t err = make_error(CWIST_ERR_JSON);
+  in_addr_t addr = inet_addr(address);
+
+  if(addr == INADDR_NONE) {
+    return CWIST_HTTP_UNAVAILABLE_ADDRESS;
+  }
+
+  // socklen_t addrlen = sizeof(struct sockaddr_in); // Unused
+
+  if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    err.error.err_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(err.error.err_json, "err", "Failed to create IPv4 socket");
+    const char *cjson_error_log = cJSON_Print(err.error.err_json);
+    perror(cjson_error_log);
+
+    return CWIST_CREATE_SOCKET_FAILED;
+  }
+
+  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+    err.error.err_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(err.error.err_json, "err", "Failed to set up IPv4 socket options");
+    const char *cjson_error_log = cJSON_Print(err.error.err_json);
+    perror(cjson_error_log);
+
+    return CWIST_HTTP_SETSOCKOPT_FAILED;  
+  }
+
+  sockv4->sin_family = AF_INET;
+  sockv4->sin_addr.s_addr = addr;
+  sockv4->sin_port = htons(port);
+
+  if(bind(server_fd, (struct sockaddr *)sockv4, sizeof(struct sockaddr_in)) < 0) {
+    err.error.err_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(err.error.err_json, "err", "Failed to bind IPv4 socket");
+    const char *cjson_error_log = cJSON_Print(err.error.err_json);
+    perror(cjson_error_log);
+
+    return CWIST_HTTP_BIND_FAILED;
+  }
+
+  if(listen(server_fd, backlog) < 0) {
+    err.error.err_json = cJSON_CreateObject();
+    char err_msg[128];
+    char err_format[128] = "Failed to listen at %s:%d";
+    snprintf(err_msg, 127, err_format, address, port);
+
+    cJSON_AddStringToObject(err.error.err_json, "err", err_msg);
+    const char *cjson_error_log = cJSON_Print(err.error.err_json);
+    perror(cjson_error_log);
+
+    return CWIST_HTTP_LISTEN_FAILED;
+  }
+
+  return server_fd;
+}
+
+cwist_error_t cwist_accept_socket(int server_fd, struct sockaddr *sockv4, void (*handler_func)(int client_fd)) {
+  int pid = fork();
+  int client_fd = -1;
+  socklen_t addrlen = sizeof(struct sockaddr_in);
+
+  cwist_error_t err = make_error(CWIST_ERR_JSON);
+  err.error.err_json = cJSON_CreateObject();
+
+  if(pid == -1) {
+    cJSON_AddStringToObject(err.error.err_json, "err", "Failed to fork IPv4 socket accept process");
+    return err;
+  } else if(pid == 0) {
+    while(true) {
+      if((client_fd = accept(server_fd, sockv4, &addrlen)) < 0) {
+        cJSON_AddStringToObject(err.error.err_json, "err", "Failed to accept socket");
+        const char *cjson_error_log = cJSON_Print(err.error.err_json);
+        perror(cjson_error_log);
+        free((void*)cjson_error_log); // Free the print buffer
+
+        if (errno == EBADF || errno == EINVAL || errno == ENOTSOCK) {
+            fprintf(stderr, "Fatal socket error %d. Exiting accept loop.\n", errno);
+            break;
+        }
+        continue;
+      }
+
+      handler_func(client_fd);
+    }
+    // Clean up in child before exit
+    cJSON_Delete(err.error.err_json);
+    exit(1);
+  } else {
+    int status;
+    // Parent waits for the child to finish
+    waitpid(pid, &status, 0);
+    const char *err_format = "Accept socket finished; Parent pid: %d, Child PID was %d\n";
+    char err_msg[128];
+    snprintf(err_msg, 127, err_format, getpid(), pid);
+  }
+  
+  // Parent process returns success
+  err = make_error(CWIST_ERR_INT16);
+  err.error.err_i16 = 0;
+  return err;
 }

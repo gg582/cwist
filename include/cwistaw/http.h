@@ -3,6 +3,8 @@
 
 #include <cwistaw/smartstring.h>
 #include <cwistaw/err/cwist_err.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 /* --- Enums --- */
 
@@ -74,4 +76,15 @@ void cwist_http_header_free_all(cwist_http_header_node *head);
 const char *cwist_http_method_to_string(cwist_http_method_t method);
 cwist_http_method_t cwist_http_string_to_method(const char *method_str);
 
+// TCP socket handler
+// socket -> bind -> listen
+int cwist_make_socket_ipv4(struct sockaddr_in *sockv4, const char *address, uint16_t port, uint16_t backlog);
+cwist_error_t cwist_accept_socket(int server_fd, struct sockaddr *sockv4, void (*handler_func)(int client_fd));
+
 #endif
+
+extern const int CWIST_CREATE_SOCKET_FAILED;
+extern const int CWIST_HTTP_UNAVAILABLE_ADDRESS;
+extern const int CWIST_HTTP_BIND_FAILED;
+extern const int CWIST_HTTP_SETSOCKOPT_FAILED;
+extern const int CWIST_HTTP_LISTEN_FAILED;

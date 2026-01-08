@@ -13,6 +13,11 @@ This aims for modern, and fast C web framework.
 == Dependency ==
 - https://github.com/DaveGamble/cJSON
 
+== What am I doing for implementing socket handler? ==
+- Abstract socket listener
+- Easy socket accept with handler function
+  - Human-friendly error with cJSON
+
 == Plans ==
 - Memory manager
 - (optional) libgc extension
