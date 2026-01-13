@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <cwist/http.h>
 #include <cwist/sstring.h>
 #include <cwist/err/cwist_err.h>
@@ -141,6 +142,7 @@ cwist_http_request *cwist_http_request_create(void) {
     req->method = CWIST_HTTP_GET; // Default
     req->path = cwist_sstring_create();
     req->query = cwist_sstring_create();
+    req->query_params = cwist_query_map_create();
     req->version = cwist_sstring_create();
     req->headers = NULL;
     req->body = cwist_sstring_create();
@@ -157,6 +159,7 @@ void cwist_http_request_destroy(cwist_http_request *req) {
     if (req) {
         cwist_sstring_destroy(req->path);
         cwist_sstring_destroy(req->query);
+        cwist_query_map_destroy(req->query_params);
         cwist_sstring_destroy(req->version);
         cwist_sstring_destroy(req->body);
         cwist_http_header_free_all(req->headers);
@@ -217,12 +220,25 @@ cwist_http_request *cwist_http_parse_request(const char *raw_request) {
     strncpy(request_line, line_start, request_line_len);
     request_line[request_line_len] = '\0';
     
-    char *method_str = strtok(request_line, " ");
-    char *path_str = strtok(NULL, " ");
-    char *version_str = strtok(NULL, " ");
+    char *next_ptr;
+    char *method_str = strtok_r(request_line, " ", &next_ptr);
+    char *path_str = strtok_r(NULL, " ", &next_ptr);
+    char *version_str = strtok_r(NULL, " ", &next_ptr);
     
     if (method_str) req->method = cwist_http_string_to_method(method_str);
-    if (path_str) cwist_sstring_assign(req->path, path_str);
+    if (path_str) {
+      char *query = strchr(path_str, '?');
+      if(query) {
+        *query = '\0';
+        cwist_sstring_assign(req->path, path_str);
+        cwist_sstring_assign(req->query, query + 1); // exclude ? mark
+        cwist_query_map_parse(req->query_params, req->query->data);
+      } else {
+        cwist_sstring_assign(req->path, path_str);
+        cwist_sstring_assign(req->query, "");
+      }
+    }
+
     if (version_str) {
         cwist_sstring_assign(req->version, version_str);
         if (strcmp(version_str, "HTTP/1.1") == 0) {

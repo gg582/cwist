@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -I./include -I./lib -I./lib/cjson -Wall -Wextra -pthread
 LIBS = -pthread -lcjson
 
-SRCS = src/sstring/sstring.c src/process/err/error.c src/http/http.c src/session/session_manager.c
+SRCS = src/sstring/sstring.c src/process/err/error.c src/http/http.c src/http/mux.c src/http/query.c src/session/session_manager.c src/siphash/siphash.c
 OBJS = $(SRCS:.c=.o)
 LIB_NAME = libcwist.a
 
@@ -23,6 +23,14 @@ test_http: $(LIB_NAME) tests/test_http.c
 	$(CC) $(CFLAGS) -o test_http tests/test_http.c $(LIB_NAME) $(LIBS)
 	./test_http
 
+test_siphash: $(LIB_NAME) tests/test_siphash.c
+	$(CC) $(CFLAGS) -o test_siphash tests/test_siphash.c $(LIB_NAME) $(LIBS)
+	./test_siphash
+
+test_mux: $(LIB_NAME) tests/test_mux.c
+	$(CC) $(CFLAGS) -o test_mux tests/test_mux.c $(LIB_NAME) $(LIBS)
+	./test_mux
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -39,4 +47,4 @@ uninstall:
 	rm -rf $(INCLUDEDIR)/cwist
 
 clean:
-	rm -f $(OBJS) $(LIB_NAME) test_sstring test_http
+	rm -f $(OBJS) $(LIB_NAME) test_sstring test_http test_siphash test_mux
