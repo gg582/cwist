@@ -29,6 +29,8 @@ cwist_sstring *cwist_sstring_create(void);
 void cwist_sstring_destroy(cwist_sstring *str);
 
 // String manipulation API
+cwist_error_t cwist_sstring_append_len(cwist_sstring *str, const char *data, size_t len);
+cwist_error_t cwist_sstring_assign_len(cwist_sstring *str, const char *data, size_t len);
 cwist_error_t cwist_sstring_init (cwist_sstring *str);
 cwist_error_t cwist_sstring_ltrim(cwist_sstring *str);
 cwist_error_t cwist_sstring_rtrim(cwist_sstring *str);
