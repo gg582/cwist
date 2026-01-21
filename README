@@ -1,36 +1,55 @@
-==== What is CWIST? =====
-CWIST is a acronym of "C Web development Is Still Trustworthy".
-This aims for modern, and fast C web framework.
+# CWIST - C Web development Is Still Trustworthy
 
-== What is going on? ==
-- SString (with compare & substr)
-- Error Codes
-- HTTP Request Parsing
-- HTTP Response Sending
+CWIST is a modern, lightweight C web framework designed for building secure and scalable applications. It brings the ergonomics of modern web frameworks to C without sacrificing performance or control.
 
-== Notice ==
-- smartstring has been renamed to sstring (see include/cwist/sstring.h and src/sstring/)
+== FEATURES ==
 
-== What's next? ==
-- HTTP Handlers
-  - Abstract socket handlers
-  - Memory-safe easy multiprocessing
-- HTTP Client Support
-- SString formatted printing (sprintf)
-- Robust error handling in parser
+- HTTP/1.1 Server: Robust request parsing and response handling.
+- SString: Custom string library with compare and substr support.
+- WebSocket Support: Easy upgrade from HTTP to persistent connections.
+- Middleware System: Chainable processing for logging and security.
+- Path Parameters: Express-style routing with :param support and Mux Router.
+- JSON Builder: Lightweight utility using cJSON for response building.
+- Secure by Design: Built-in integration with Monocypher.
 
-== Dependency ==
-- https://github.com/DaveGamble/cJSON
+== QUICK START ==
 
-== What am I doing for implementing socket handler? ==
-- Abstract socket listener
-- Easy socket accept with handler function
-  - Human-friendly error with cJSON
+1. Installation:
+$ git clone [https://github.com/your/cwist.git](https://github.com/your/cwist.git)
+$ cd cwist
+$ make install
 
-== Plans ==
-- Memory manager
-- (optional) libgc extension
-- Mux Router
-- CORS, HTTPS
-- RestAPI Server
+2. Hello World (main.c):
 
+====================================== code ===================================
+| #include <cwist/app.h>                                                      |
+| #include <cwist/sstring.h>                                                  |
+|                                                                             |
+| void index_handler(cwist_http_request *req, cwist_http_response *res) {     |
+|     cwist_sstring_assign(res->body, "Hello from CWIST!");                   |
+| }                                                                           |
+|                                                                             |
+| int main() {                                                                |
+|     cwist_app *app = cwist_app_create();                                    |
+|     cwist_app_get(app, "/", index_handler);                                 |
+|     cwist_app_listen(app, 8080);                                            |
+|     cwist_app_destroy(app);                                                 |
+|     return 0;                                                               |
+| }                                                                           |
+===============================================================================
+
+3. Compilation:
+$ gcc -o server main.c -lcwist -lssl -lcrypto -luriparser -lsqlite3 -lcjson
+$ ./server
+
+== DEPENDENCIES ==
+
+- cJSON ([https://github.com/DaveGamble/cJSON](https://github.com/DaveGamble/cJSON))
+- OpenSSL (libssl, libcrypto)
+- uriparser
+- sqlite3
+
+== ROADMAP ==
+
+- Security: Implementation of HTTPS and CORS.
+- RestAPI: Dedicated features for optimized RestAPI server deployment.
