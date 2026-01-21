@@ -3,8 +3,8 @@ CFLAGS = -Wall -Wextra -g -I../../include
 LDFLAGS = -L../../
 LIBS = -lcwist -lcjson -lsqlite3 -luriparser -lssl -lcrypto -lpthread
 
-SRCS = main.c
-TARGET = simple_server
+SRCS = server.c
+TARGET = server
 
 all: $(TARGET)
 

@@ -91,37 +91,8 @@ void generate_cde_html(cwist_sstring *html, cJSON *json) {
         "</body>\n</html>");
 }
 
-void send_response(int client_fd, cwist_http_response *res) {
-    cwist_sstring *raw = cwist_sstring_create();
-    
-    // Status Line
-    char status_line[128];
-    snprintf(status_line, 127, "%s %d %s\r\n", res->version->data, res->status_code, res->status_text->data);
-    cwist_sstring_append(raw, status_line);
-
-    // Headers
-    cwist_http_header_node *curr = res->headers;
-    while(curr) {
-        cwist_sstring_append(raw, curr->key->data);
-        cwist_sstring_append(raw, ": ");
-        cwist_sstring_append(raw, curr->value->data);
-        cwist_sstring_append(raw, "\r\n");
-        curr = curr->next;
-    }
-    cwist_sstring_append(raw, "\r\n"); // End of headers
-
-    // Body
-    if(res->body->data) {
-        cwist_sstring_append(raw, res->body->data);
-    }
-
-    if (raw->data) {
-        send(client_fd, raw->data, strlen(raw->data), 0);
-    }
-    cwist_sstring_destroy(raw);
-}
-
-void handle_client(int client_fd) {
+void handle_client(int client_fd, void *ctx) {
+    (void)ctx;
     char buffer[BUFFER_SIZE];
     int read_len = read(client_fd, buffer, BUFFER_SIZE - 1);
     if (read_len < 0) {
@@ -153,7 +124,7 @@ void handle_client(int client_fd) {
          cwist_sstring_assign(res->status_text, "Internal Server Error");
     }
 
-    send_response(client_fd, res);
+    cwist_http_send_response(client_fd, res);
     cwist_http_response_destroy(res);
     close(client_fd);
 }
@@ -172,6 +143,6 @@ int main() {
     printf("Server listening on port %d\n", PORT);
     printf("Visit http://%s:%d to see the CDE JSON Viewer\n", addr, port);
 
-    cwist_accept_socket(server_fd, (struct sockaddr*)&sockv4, handle_client);
+    cwist_accept_socket(server_fd, (struct sockaddr*)&sockv4, handle_client, NULL);
     return 0;
 }

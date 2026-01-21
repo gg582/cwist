@@ -1,18 +1,15 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
-LIBS = -lcjson -lcwist
+CFLAGS = -Wall -Wextra -g -I../../include
+LDFLAGS = -L../../
+LIBS = -lcwist -lcjson -lsqlite3 -luriparser -lssl -lcrypto -lpthread
 
 SRCS = main.c
-OBJS = $(SRCS:.c=.o)
-TARGET = cde-viewer
+TARGET = cde_json_viewer
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(TARGET)
