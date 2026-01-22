@@ -51,7 +51,7 @@ $ ./server
 - uriparser
 - sqlite3
 
-== ROADMAP ==
+== PAST ROADMAP ==
 
-- Security: Implementation of HTTPS and CORS.
+- Security: CORS middleware and origin / header policy management.
 - RestAPI: Dedicated features for optimized RestAPI server deployment.
